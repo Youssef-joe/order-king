@@ -20,6 +20,47 @@ interface MenuItem {
 }
 
 const { apiFetch } = useApi()
+const { user } = useAuth()
+const { addItem } = useCart()
+
+// Fetch last order
+const lastOrder = ref<any>(null)
+const loadingLastOrder = ref(false)
+
+async function fetchLastOrder() {
+  if (!user.value) return
+  loadingLastOrder.value = true
+  try {
+    const orders = await apiFetch<any[]>('/users/orders')
+    if (orders.length > 0) {
+      lastOrder.value = orders[0]
+    }
+  } catch {
+    // User might not have orders yet
+  } finally {
+    loadingLastOrder.value = false
+  }
+}
+
+function orderAgain() {
+  if (!lastOrder.value) return
+  
+  // Add all items from the last order to cart
+  lastOrder.value.items.forEach((orderItem: any) => {
+    addItem({
+      id: orderItem.menuItem.id,
+      name: orderItem.menuItem.name,
+      price: orderItem.unitPrice,
+      quantity: orderItem.quantity,
+      imageUrl: orderItem.menuItem.imageUrl,
+      category: orderItem.menuItem.category,
+      restaurantId: lastOrder.value.restaurantId,
+      restaurantName: lastOrder.value.restaurant.name,
+    })
+  })
+  
+  navigateTo('/cart')
+}
 
 // Fetch restaurants
 const { data: restaurants, pending: loadingRestaurants } = await useAsyncData<Restaurant[]>(
@@ -60,6 +101,7 @@ onMounted(async () => {
   if (restaurants.value?.length) {
     await selectRestaurant(restaurants.value[0])
   }
+  await fetchLastOrder()
 })
 </script>
 
@@ -74,6 +116,37 @@ onMounted(async () => {
         <span class="text-brand-500">hungry for?</span>
       </h1>
     </header>
+
+    <!-- Recent Order -->
+    <section v-if="user && lastOrder" class="mb-8 animate-fade-up">
+      <div class="bg-gradient-to-br from-brand-50 to-orange-50 rounded-3xl p-5 border border-brand-100">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div class="flex-1">
+            <p class="text-xs font-600 text-brand-600 uppercase tracking-wide mb-1">Your Last Order</p>
+            <h3 class="font-display font-700 text-lg text-ink mb-1">{{ lastOrder.restaurant.name }}</h3>
+            <p class="text-sm text-ink-muted mb-3">
+              {{ lastOrder.items.length }} item{{ lastOrder.items.length !== 1 ? 's' : '' }} · EGP {{ lastOrder.totalAmount }}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="item in lastOrder.items.slice(0, 3)"
+                :key="item.id"
+                class="text-xs bg-white px-3 py-1 rounded-full text-ink-muted border border-orange-100"
+              >
+                {{ item.quantity }}x {{ item.menuItem.name }}
+              </span>
+              <span v-if="lastOrder.items.length > 3" class="text-xs text-ink-muted">+{{ lastOrder.items.length - 3 }} more</span>
+            </div>
+          </div>
+          <button
+            @click="orderAgain"
+            class="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-display font-600 text-sm transition-colors shadow-brand hover:shadow-none flex-shrink-0"
+          >
+            Order Again
+          </button>
+        </div>
+      </div>
+    </section>
 
     <!-- Restaurant selector -->
     <section class="mb-8">
