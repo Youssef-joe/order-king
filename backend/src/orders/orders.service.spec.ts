@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from './orders.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
 
 const mockMenuItems = [
   { id: 'item-1', name: 'Burger', price: 89, restaurantId: 'rest-1', available: true },
@@ -29,6 +30,7 @@ describe('OrdersService', () => {
       providers: [
         OrdersService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: UsersService, useValue: { findOrCreate: jest.fn() } },
       ],
     }).compile();
 
