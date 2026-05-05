@@ -45,7 +45,7 @@ async function handleSignOut() {
         <!-- Auth -->
         <button
           v-if="!user"
-          @click="signIn"
+          @click="handleSignIn"
           class="px-4 py-2 bg-ink text-white rounded-2xl text-sm font-medium hover:bg-ink-soft transition-colors"
         >
           Sign in
@@ -60,8 +60,14 @@ async function handleSignOut() {
           <span v-else class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-display font-700 text-sm">
             {{ user.email?.[0].toUpperCase() }}
           </span>
+          <NuxtLink
+            to="/profile"
+            class="text-ink-muted text-sm hover:text-ink transition-colors hidden sm:block"
+          >
+            Profile
+          </NuxtLink>
           <button
-            @click="signOut"
+            @click="handleSignOut"
             class="text-ink-muted text-sm hover:text-ink transition-colors hidden sm:block"
           >
             Sign out

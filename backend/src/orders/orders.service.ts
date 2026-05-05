@@ -1,14 +1,21 @@
 // src/orders/orders.service.ts
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { UsersService } from '../users/users.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private usersService: UsersService,
+  ) {}
 
   async create(userId: string, userEmail: string, dto: CreateOrderDto) {
+    // Ensure user exists in database
+    await this.usersService.findOrCreate(userId, userEmail);
+
     // Validate all menu items exist and belong to the restaurant
     const menuItemIds = dto.items.map((i) => i.menuItemId);
     const menuItems = await this.prisma.menuItem.findMany({
@@ -35,7 +42,6 @@ export class OrdersService {
     const order = await this.prisma.order.create({
       data: {
         userId,
-        userEmail,
         restaurantId: dto.restaurantId,
         deliveryAddress: dto.deliveryAddress,
         notes: dto.notes,
