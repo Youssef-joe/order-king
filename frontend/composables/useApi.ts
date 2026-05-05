@@ -11,7 +11,6 @@ export function useApi() {
 
   async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
     const token = session.value?.access_token
-    console.log('[apiFetch] token present:', !!token, '| first 20 chars:', token?.slice(0, 20))
 
     const res = await fetch(`${config.public.apiBaseUrl as string}/api${path}`, {
       ...options,

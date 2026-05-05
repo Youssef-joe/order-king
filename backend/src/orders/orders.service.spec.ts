@@ -26,6 +26,7 @@ describe('OrdersService', () => {
   let service: OrdersService;
 
   beforeEach(async () => {
+    jest.useFakeTimers();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
@@ -36,6 +37,11 @@ describe('OrdersService', () => {
 
     service = module.get<OrdersService>(OrdersService);
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   describe('create()', () => {

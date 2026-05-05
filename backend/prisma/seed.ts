@@ -51,14 +51,6 @@ async function main() {
       },
       {
         restaurantId: burgerHouse.id,
-        name: 'BBQ Bacon Burger',
-        description: 'Triple smash, crispy bacon, caramelized onions, BBQ sauce',
-        price: 109,
-        category: 'Burgers',
-        imageUrl: 'https://images.unsplash.com/photo-1553979459-d2229ba7433a?w=600',
-      },
-      {
-        restaurantId: burgerHouse.id,
         name: 'Chocolate Milkshake',
         description: 'Thick Belgian chocolate shake, whipped cream',
         price: 39,
@@ -141,7 +133,7 @@ async function main() {
 
   console.log('✅ Seeded:');
   console.log(`   - 2 restaurants`);
-  console.log(`   - 12 menu items`);
+  console.log(`   - 11 menu items`);
 }
 
 main()
