@@ -25,63 +25,146 @@ A full-stack food delivery web platform built with **NestJS**, **Nuxt 4**, **Pos
 git clone https://github.com/your-username/orderking.git
 cd orderking
 
-# 2. Copy and fill environment variables
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+# 2. Create root .env file for Docker Compose
+cat > .env << EOF
+SUPABASE_JWT_SECRET="your-supabase-jwt-secret-here"
+NUXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
+NUXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key-here"
+EOF
 
-# 3. Start everything
+# 3. Create backend .env file
+cat > backend/.env << EOF
+DATABASE_URL="postgresql://orderking:orderking_secret@postgres:5432/orderking?schema=public"
+SUPABASE_JWT_SECRET="your-supabase-jwt-secret-here"
+SUPABASE_URL="https://your-project-id.supabase.co"
+PORT=4000
+EOF
+
+# 4. Create frontend .env file
+cat > frontend/.env << EOF
+NUXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
+NUXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key-here"
+NUXT_PUBLIC_API_BASE_URL="http://localhost:4000"
+EOF
+
+# 5. Start Colima (if using macOS with Colima)
+colima start
+
+# 6. Start all services
 docker compose up --build
 ```
 
 - **Frontend**: http://localhost:3000  
 - **Backend API**: http://localhost:4000  
+- **PostgreSQL**: localhost:5432 (user: `orderking`, password: `orderking_secret`)  
 
 ---
 
 ## Environment Variables
 
+### Required Files
+
+You need **three** `.env` files:
+
+1. **Root `.env`** (for Docker Compose)
+2. **`backend/.env`** (for NestJS)
+3. **`frontend/.env`** (for Nuxt)
+
+### Root `.env` (for Docker Compose)
+
+```env
+SUPABASE_JWT_SECRET="your-supabase-jwt-secret-here"
+NUXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
+NUXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key-here"
+```
+
 ### `backend/.env`
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/orderking?schema=public"
-SUPABASE_JWT_SECRET="your-supabase-jwt-secret"
+# For Docker Compose (uses local postgres container)
+DATABASE_URL="postgresql://orderking:orderking_secret@postgres:5432/orderking?schema=public"
+
+# For local development (uses Supabase)
+# DATABASE_URL="postgresql://postgres.YOUR_PROJECT_ID:YOUR_PASSWORD@aws-0-region.pooler.supabase.com:5432/postgres"
+
+SUPABASE_JWT_SECRET="your-supabase-jwt-secret-here"
+SUPABASE_URL="https://your-project-id.supabase.co"
 PORT=4000
 ```
 
 ### `frontend/.env`
 
 ```env
-NUXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
-NUXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+NUXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
+NUXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key-here"
 NUXT_PUBLIC_API_BASE_URL="http://localhost:4000"
 ```
 
-> **Where to get these:**
-> - Go to [supabase.com](https://supabase.com) → Your Project → Settings → API
-> - `DATABASE_URL`: Settings → Database → Connection String (URI mode)
-> - `SUPABASE_JWT_SECRET`: Settings → API → JWT Secret
-> - `SUPABASE_URL` + `ANON_KEY`: Settings → API
+### Where to Get Supabase Credentials
+
+1. Go to [supabase.com](https://supabase.com) and sign in
+2. Select your project
+3. Go to **Settings → API**
+4. Copy:
+   - **Project URL** → `NUXT_PUBLIC_SUPABASE_URL`
+   - **anon/public key** → `NUXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **JWT Secret** → `SUPABASE_JWT_SECRET`
+5. Go to **Settings → Database** for `DATABASE_URL` (if using Supabase DB)
 
 ---
 
 ## Running Locally (Without Docker)
 
+### Prerequisites
+
+- Node.js 20+
+- npm or pnpm
+- Supabase account (for auth and optionally database)
+
 ### Backend
 
 ```bash
 cd backend
+
+# Install dependencies
 npm install
-npx prisma migrate dev --name init
+
+# Create .env file (see Environment Variables section above)
+# Make sure DATABASE_URL points to your Supabase or local PostgreSQL
+
+# Push database schema
+npx prisma db push
+
+# Seed the database
 npx prisma db seed
+
+# Start development server
 npm run start:dev
 ```
+
+Backend will run on http://localhost:4000
 
 ### Frontend
 
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
+
+# Create .env file (see Environment Variables section above)
+
+# Start development server
 npm run dev
+```
+
+Frontend will run on http://localhost:3000
+
+### Running Tests
+
+```bash
+cd backend
+npm test
 ```
 
 ---
@@ -139,10 +222,14 @@ _[Link to MP4 recording — see submission]_
 ## Bonus Features Implemented
 
 - [x] Order tracking page with real-time status via Supabase Realtime
+- [x] Real-time activity log showing timestamped status changes
+- [x] User profile page with view/edit functionality
+- [x] "Order Again" feature on landing page
 - [x] Category filter for menu items
 - [x] Optimistic UI updates on cart actions
 - [x] Docker Compose full-stack setup
-- [x] Unit test for `OrdersService`
+- [x] Unit tests for `OrdersService` with Jest
+- [x] ES256 JWT verification with JWKS
 
 ---
 
