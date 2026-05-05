@@ -27,6 +27,7 @@ interface Order {
 const order = ref<Order | null>(null)
 const loading = ref(true)
 const error = ref('')
+const activityLog = ref<Array<{ status: string; timestamp: Date }>>([])
 
 const STATUS_STEPS = ['PENDING', 'PAID', 'PREPARING', 'READY', 'DELIVERED']
 
@@ -54,6 +55,10 @@ const isDelivered = computed(() => order.value?.status === 'DELIVERED')
 async function loadOrder() {
   try {
     order.value = await apiFetch<Order>(`/orders/${orderId}`)
+    // Initialize log with current status
+    if (order.value) {
+      activityLog.value = [{ status: order.value.status, timestamp: new Date() }]
+    }
   } catch (e: any) {
     error.value = e.message
   } finally {
@@ -80,8 +85,16 @@ onMounted(async () => {
       },
       (payload) => {
         if (order.value && payload.new) {
-          order.value.status = payload.new.status
+          const newStatus = payload.new.status
+          const oldStatus = order.value.status
+          
+          order.value.status = newStatus
           order.value.paymentStatus = payload.new.paymentStatus
+          
+          // Add to activity log if status changed
+          if (newStatus !== oldStatus) {
+            activityLog.value.unshift({ status: newStatus, timestamp: new Date() })
+          }
         }
       }
     )
@@ -107,8 +120,14 @@ watch(
         try {
           const s = await apiFetch<{ status: string; paymentStatus: string }>(`/orders/${orderId}/status`)
           if (order.value) {
+            const oldStatus = order.value.status
             order.value.status = s.status
             order.value.paymentStatus = s.paymentStatus
+            
+            // Add to activity log if status changed
+            if (s.status !== oldStatus) {
+              activityLog.value.unshift({ status: s.status, timestamp: new Date() })
+            }
           }
         } catch {}
       }, 5000)
@@ -124,6 +143,10 @@ onUnmounted(() => {
 const deliveryFee = 20
 const serviceFee = computed(() => Math.round((order.value?.totalAmount || 0) * 0.05))
 const grandTotal = computed(() => (order.value?.totalAmount || 0) + deliveryFee + serviceFee.value)
+
+function formatTime(date: Date) {
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
 </script>
 
 <template>
@@ -244,6 +267,30 @@ const grandTotal = computed(() => (order.value?.totalAmount || 0) + deliveryFee 
       <div v-if="order.deliveryAddress" class="bg-white rounded-3xl p-5 shadow-card">
         <h2 class="font-display font-700 text-sm text-ink mb-2">Delivery Address</h2>
         <p class="text-ink-muted text-sm">📍 {{ order.deliveryAddress }}</p>
+      </div>
+
+      <!-- Activity Log -->
+      <div class="bg-white rounded-3xl p-5 shadow-card">
+        <h2 class="font-display font-700 text-sm text-ink mb-4">Real-Time Activity Log</h2>
+        <div class="space-y-3">
+          <div
+            v-for="(log, index) in activityLog"
+            :key="index"
+            class="flex items-start gap-3 animate-fade-up"
+          >
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-sm">
+              {{ STATUS_META[log.status]?.emoji || '📝' }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-600 text-sm text-ink">{{ STATUS_META[log.status]?.label || log.status }}</p>
+              <p class="text-xs text-ink-muted">{{ STATUS_META[log.status]?.desc || 'Status updated' }}</p>
+            </div>
+            <span class="text-xs text-ink-muted font-mono flex-shrink-0">{{ formatTime(log.timestamp) }}</span>
+          </div>
+          <div v-if="activityLog.length === 0" class="text-center py-4 text-ink-muted text-sm">
+            No activity yet
+          </div>
+        </div>
       </div>
 
       <!-- CTAs -->
