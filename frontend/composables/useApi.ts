@@ -1,13 +1,19 @@
 // composables/useApi.ts
+import { useRuntimeConfig } from 'nuxt/app'
+import type { Ref } from 'vue'
+import type { Session } from '@supabase/supabase-js'
+
+declare function useSupabaseSession(): Ref<Omit<Session, 'user'> | null>
+
 export function useApi() {
   const config = useRuntimeConfig()
-  const { auth } = useSupabaseClient()
+  const session = useSupabaseSession()
 
   async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const { data: session } = await auth.getSession()
-    const token = session?.session?.access_token
+    const token = session.value?.access_token
+    console.log('[apiFetch] token present:', !!token, '| first 20 chars:', token?.slice(0, 20))
 
-    const res = await fetch(`${config.public.apiBaseUrl}/api${path}`, {
+    const res = await fetch(`${config.public.apiBaseUrl as string}/api${path}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',

@@ -1,55 +1,43 @@
 // composables/useAuth.ts
+import { readonly, onMounted } from 'vue'
+import type { SupabaseClient, User } from '@supabase/supabase-js'
+import { useApi } from './useApi'
+
+// Declare auto-imports provided by @nuxtjs/supabase at runtime
+declare function useSupabaseClient(): SupabaseClient
+declare function useSupabaseUser(): ReturnType<typeof import('vue').ref<User | null>>
+
 export const useAuth = () => {
   const supabase = useSupabaseClient()
-  const user = ref(null)
-  const loading = ref(true)
+  const user = useSupabaseUser()
   const { apiFetch } = useApi()
 
-  // Initialize auth state
-  const initAuth = async () => {
+  const ensureUserExists = async (authUser: User) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      user.value = session?.user || null
-      
-      // If user is logged in, ensure their data is stored in the backend
-      if (user.value) {
-        await ensureUserExists(user.value)
+      await apiFetch('/users/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          fullName: authUser.user_metadata?.full_name || authUser.user_metadata?.name,
+          avatarUrl: authUser.user_metadata?.avatar_url,
+        }),
+      })
+    } catch {
+      // Profile will be created on first order via findOrCreate
+    }
+  }
+
+  onMounted(async () => {
+    if (user.value) await ensureUserExists(user.value)
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        ensureUserExists(session.user)
       }
-      
-      console.log('Auth initialized:', user.value?.email)
-    } catch (error) {
-      console.error('Auth init error:', error)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  // Ensure user data is stored in the backend
-  const ensureUserExists = async (authUser: any) => {
-    try {
-      await apiFetch('/users/profile', { method: 'GET' })
-    } catch (error) {
-      // User doesn't exist yet, but that's ok - will be created on first order
-      console.log('User profile will be created on first order')
-    }
-  }
-
-  // Listen for auth changes
-  supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Auth event:', event, session?.user?.email)
-    user.value = session?.user || null
-    
-    if (event === 'SIGNED_IN' && session?.user) {
-      ensureUserExists(session.user)
-    }
+    })
   })
-
-  // Initialize on mount
-  onMounted(initAuth)
 
   return {
     user: readonly(user),
-    loading: readonly(loading),
     signIn: () => supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/` },

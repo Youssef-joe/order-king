@@ -37,10 +37,11 @@ export class UsersService {
     })
   }
 
-  async updateProfile(id: string, data: { fullName?: string; avatarUrl?: string }) {
-    return await this.prisma.user.update({
+  async updateProfile(id: string, email: string, data: { fullName?: string; avatarUrl?: string }) {
+    return await this.prisma.user.upsert({
       where: { id },
-      data,
+      update: data,
+      create: { id, email, ...data },
     })
   }
 
