@@ -1,10 +1,10 @@
-# 🍔 OrderKing — Food Delivery Platform
+# OrderKing — Food Delivery Platform
 
 A full-stack food delivery web platform built with **NestJS**, **Nuxt 4**, **PostgreSQL (Supabase)**, **Prisma**, and **Supabase Auth**.
 
 ---
 
-## 📦 Tech Stack
+## Tech Stack
 
 | Layer       | Technology                        |
 |-------------|-----------------------------------|
@@ -18,7 +18,7 @@ A full-stack food delivery web platform built with **NestJS**, **Nuxt 4**, **Pos
 
 ---
 
-## 🚀 Quick Start (Docker Compose)
+## Quick Start (Docker Compose)
 
 ```bash
 # 1. Clone the repo
@@ -38,7 +38,7 @@ docker compose up --build
 
 ---
 
-## 🔑 Environment Variables
+## Environment Variables
 
 ### `backend/.env`
 
@@ -64,7 +64,7 @@ NUXT_PUBLIC_API_BASE_URL="http://localhost:4000"
 
 ---
 
-## 🛠 Running Locally (Without Docker)
+## Running Locally (Without Docker)
 
 ### Backend
 
@@ -86,7 +86,7 @@ npm run dev
 
 ---
 
-## 🗄 Database Seeding
+## Database Seeding
 
 Seed data is in `backend/prisma/seed.ts` — it creates:
 - 2 restaurants (BurgerHouse, Spice Garden)
@@ -100,7 +100,7 @@ cd backend && npx prisma db seed
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 orderking/
@@ -130,13 +130,13 @@ orderking/
 
 ---
 
-## 🎥 Video Walkthrough
+## Video Walkthrough
 
 _[Link to MP4 recording — see submission]_
 
 ---
 
-## ✅ Bonus Features Implemented
+## Bonus Features Implemented
 
 - [x] Order tracking page with real-time status via Supabase Realtime
 - [x] Category filter for menu items
@@ -146,7 +146,7 @@ _[Link to MP4 recording — see submission]_
 
 ---
 
-## 🏗 Architecture Notes
+## Architecture Notes
 
 - **Auth flow**: Supabase Auth issues JWTs → frontend attaches as `Authorization: Bearer <token>` → NestJS `SupabaseAuthGuard` validates using JWT secret
 - **Payment**: Simulated — order moves to `PAID` status immediately after "checkout", then cycles through `PREPARING → READY → DELIVERED` via a timeout (Supabase Realtime pushes updates)
