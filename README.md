@@ -213,12 +213,6 @@ orderking/
 
 ---
 
-## Video Walkthrough
-
-_[Link to MP4 recording — see submission]_
-
----
-
 ## Bonus Features Implemented
 
 - [x] Order tracking page with real-time status via Supabase Realtime
